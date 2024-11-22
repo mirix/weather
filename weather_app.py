@@ -2,6 +2,7 @@ import os
 import json
 import pathlib
 import mimetypes
+import gpxpy
 import pandas as pd
 import gradio as gr
 from datetime import datetime, timedelta
@@ -193,17 +194,30 @@ def coor_gpx(gpx):
 
     #if mimetypes.guess_type(gpx.name)[0] in ['application/gpx+xml', 'application/xml']:
     try:
-        df_gpx = pd.read_xml(gpx.name, xpath=".//doc:trkseg/doc:trkpt", namespaces={"doc": "http://www.topografix.com/GPX/1/1"})
+        with open(gpx.name) as f:
+            gpx_parsed = gpxpy.parse(f)
+        # Convert to a dataframe one point at a time.
+        points = []
+        for track in gpx_parsed.tracks:
+            for segment in track.segments:
+                for p in segment.points:
+                    points.append({
+                        'lat': p.latitude,
+                        'lon': p.longitude,
+                        'altitude': p.elevation,
+                })
+        df_gpx = pd.DataFrame.from_records(points)
+        #df_gpx = pd.read_xml(gpx.name, xpath=".//doc:trkseg/doc:trkpt", namespaces={"doc": "http://www.topografix.com/GPX/1/1"})
         params = df_gpx.iloc[-1].to_dict()
-        lat=params['lat']
-        lon=params['lon']
+        lat = params['lat']
+        lon = params['lon']
 
-        if 'ele' in params:
-            params['altitude'] = params.pop('ele')
-        else:
+        if params['altitude'] == None:
             params['altitude'] = int(round(elevation_data.get_elevation(lat, lon), 0))
+        else:
+            params['altitude'] = int(round(params['altitude'], 0))
 
-        params['altitude'] = int(round(params['altitude'], 0))
+        #params['altitude'] = int(round(params['altitude'], 0))
         altitude = params['altitude']
 
         location = geolocator.reverse('{}, {}'.format(lat, lon), zoom=14)
@@ -276,4 +290,7 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
     dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table])
 
-app.launch(server_name='0.0.0.0', server_port=8000)
+
+port = int(os.environ.get('PORT', 7860))
+app.launch(server_name="0.0.0.0", server_port=port)
+
