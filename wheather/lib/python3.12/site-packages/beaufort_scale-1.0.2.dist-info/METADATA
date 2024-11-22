@@ -1,0 +1,42 @@
+Metadata-Version: 2.1
+Name: beaufort-scale
+Version: 1.0.2
+Home-page: https://github.com/BrunoASNascimento/beaufort-scale
+Author: Bruno Nascimento
+Author-email: bruno_freddy@hotmail.com
+License: MIT
+Project-URL: Código fonte, https://github.com/BrunoASNascimento/beaufort-scale
+Project-URL: Download, https://github.com/BrunoASNascimento/beaufort-scale/archive/master.zip
+Keywords: conversor,wind,speed,beaufort
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: Portuguese (Brazilian)
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Internationalization
+Classifier: Topic :: Scientific/Engineering :: Physics
+Requires-Python: >=3.4
+Description-Content-Type: text/markdown
+License-File: LICENSE.txt
+
+# Beaufort scale
+
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+[![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](LICENSE.txt)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/BrunoASNascimento/beaufort-scale.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/BrunoASNascimento/beaufort-scale/context:python)
+
+This lib translates the wind speed value for the [Beautfort scale](https://en.wikipedia.org/wiki/Beaufort_scale).
+
+## Import:
+
+`import beaufort_scale`
+
+## Functions:
+
+- `beaufort_scale_ms(value, language='en')`: Value is a number in m/s and the default language is `en`, return string.
+- `beaufort_scale_kmh(value, language='en')`: Value is a number in km/h and the default language is `en`, return string.
+
+### Languages:
+
+- English (en)
+- Portuguese brazilian (pt-br)
