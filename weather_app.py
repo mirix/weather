@@ -52,8 +52,8 @@ lon=params['lon']
 altitude=params['altitude']
 
 # Default GPX if none is uploaded
-directory = os.path.dirname(os.path.abspath(__file__))
-gpx_file = os.path.join(directory, 'default_gpx.gpx')
+#directory = os.path.dirname(os.path.abspath(__file__))
+gpx_file = os.path.join(os.getcwd(), 'default_gpx.gpx')
 gpx_path = pathlib.Path(gpx_file)
 
 # Default dates
