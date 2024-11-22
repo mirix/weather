@@ -191,44 +191,44 @@ def coor_gpx(gpx):
     date_filt = date_filt.strftime('%Y-%m-%d')
     day_print = '<h2>' + day_read + '</h2>'
 
-    if mimetypes.guess_type(gpx.name)[0] in ['application/gpx+xml', 'application/xml']:
-        try:
-            df_gpx = pd.read_xml(gpx.name, xpath=".//doc:trkseg/doc:trkpt", namespaces={"doc": "http://www.topografix.com/GPX/1/1"})
-            params = df_gpx.iloc[-1].to_dict()
-            lat=params['lat']
-            lon=params['lon']
+    #if mimetypes.guess_type(gpx.name)[0] in ['application/gpx+xml', 'application/xml']:
+    try:
+        df_gpx = pd.read_xml(gpx.name, xpath=".//doc:trkseg/doc:trkpt", namespaces={"doc": "http://www.topografix.com/GPX/1/1"})
+        params = df_gpx.iloc[-1].to_dict()
+        lat=params['lat']
+        lon=params['lon']
 
-            if 'ele' in params:
-                params['altitude'] = params.pop('ele')
-            else:
-                params['altitude'] = int(round(elevation_data.get_elevation(lat, lon), 0))
+        if 'ele' in params:
+            params['altitude'] = params.pop('ele')
+        else:
+            params['altitude'] = int(round(elevation_data.get_elevation(lat, lon), 0))
 
-            params['altitude'] = int(round(params['altitude'], 0))
-            altitude = params['altitude']
+        params['altitude'] = int(round(params['altitude'], 0))
+        altitude = params['altitude']
 
-            location = geolocator.reverse('{}, {}'.format(lat, lon), zoom=14)
+        location = geolocator.reverse('{}, {}'.format(lat, lon), zoom=14)
 
-            gpx_name = 'You have uploaded <b style="color: #004170;">' + os.path.basename(gpx.name) + '</b>'
-            location = '<p style="color: #004170">' + str(location) + '</p>'
+        gpx_name = 'You have uploaded <b style="color: #004170;">' + os.path.basename(gpx.name) + '</b>'
+        location = '<p style="color: #004170">' + str(location) + '</p>'
 
-            sunrise, sunset = sunrise_sunset(lat, lon, datetime.strptime(day_read, '%A %d %B %Y'))
+        sunrise, sunset = sunrise_sunset(lat, lon, datetime.strptime(day_read, '%A %d %B %Y'))
 
-            dates = gr.Dropdown(choices=dates_list, label='2. Next, pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
+        dates = gr.Dropdown(choices=dates_list, label='2. Next, pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
 
-            dfs = json_parser(date_filt)
+        dfs = json_parser(date_filt)
 
-            return gpx_name, location, dates, day_print, sunrise, sunset, dfs
+        return gpx_name, location, dates, day_print, sunrise, sunset, dfs
 
-        except:
-            sunrise, sunset = sunrise_sunset(lat, lon, today)
-            dfs = json_parser(dates_filt[0])
-            gpx_name = '<b style="color: firebrick;">ERROR: Not a valid GPX file. Upload another file.</b>'
-            return gpx_name, location, dates_list, day_print, sunrise, sunset, dfs
-    else:
+    except:
         sunrise, sunset = sunrise_sunset(lat, lon, today)
         dfs = json_parser(dates_filt[0])
         gpx_name = '<b style="color: firebrick;">ERROR: Not a valid GPX file. Upload another file.</b>'
         return gpx_name, location, dates_list, day_print, sunrise, sunset, dfs
+    #else:
+    #    sunrise, sunset = sunrise_sunset(lat, lon, today)
+    #    dfs = json_parser(dates_filt[0])
+    #    gpx_name = '<b style="color: firebrick;">ERROR: Not a valid GPX file. Upload another file.</b>'
+    #    return gpx_name, location, dates_list, day_print, sunrise, sunset, dfs
 
 coor_gpx(gpx_path)
 
