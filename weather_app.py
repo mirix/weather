@@ -276,4 +276,4 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
     dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table])
 
-app.launch(server_port=8000)
+app.launch(server_name='0.0.0.0', server_port=8000)
