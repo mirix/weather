@@ -191,7 +191,7 @@ def coor_gpx(gpx):
     date_filt = date_filt.strftime('%Y-%m-%d')
     day_print = '<h2>' + day_read + '</h2>'
 
-    if mimetypes.guess_type(gpx.name)[0] == 'application/gpx+xml':
+    if mimetypes.guess_type(gpx.name)[0] in ['application/gpx+xml', 'application/xml']:
         try:
             df_gpx = pd.read_xml(gpx.name, xpath=".//doc:trkseg/doc:trkpt", namespaces={"doc": "http://www.topografix.com/GPX/1/1"})
             params = df_gpx.iloc[-1].to_dict()
