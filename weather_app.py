@@ -266,12 +266,14 @@ def date_chooser(day):
 
     date = datetime.strptime(day, '%A %d %B %Y')
 
+    index = dates_list.index(day)
+
     sunrise, sunset = sunrise_sunset(lat, lon, date)
 
     date_filt = date.strftime('%Y-%m-%d')
     dfs = json_parser(date_filt)
 
-    dates = gr.Dropdown(choices=dates_list, label='2. Next, pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
+    dates = gr.Dropdown(choices=dates_list, label='2. Next, pick up the date of your hike', value=dates_list[index], interactive=True, elem_classes='required-dropdown')
 
     return day_print, sunrise, sunset, dfs, dates
 
