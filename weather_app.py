@@ -129,7 +129,10 @@ sunrise, sunset = sunrise_sunset(lat, lon, today)
 def json_parser(date):
 
     global dfs
+    global dates_dict
 
+    dates_dict = gen_dates()
+    dates_list = list(dates_dict.keys())
     resp = requests.get(url=url, headers=headers, params=params)
     data = resp.json()
 
@@ -253,6 +256,10 @@ def date_chooser(day):
     global sunset
     global sunrise_icon
     global sunset_icon
+    global dates_dict
+
+    dates_dict = gen_dates()
+    dates_list = list(dates_dict.keys())
 
     day_read = day
     day_print = '<h2>' + day_read + '</h2>'
@@ -264,7 +271,9 @@ def date_chooser(day):
     date_filt = date.strftime('%Y-%m-%d')
     dfs = json_parser(date_filt)
 
-    return day_print, sunrise, sunset, dfs
+    dates = gr.Dropdown(choices=dates_list, label='2. Next, pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
+
+    return day_print, sunrise, sunset, dfs, dates
 
 ### Gradio app ###
 with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as app:
@@ -288,7 +297,7 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
     gr.HTML('<center>Freedom Luxembourg<br><a style="color: DarkGoldenrod; font-style: italic; text-decoration: none" href="https://www.freeletz.lu/freeletz/" target="_blank">freeletz.lu</a></center>')
     gr.HTML('<center>Powered by the <a style="color: #004170; text-decoration: none" href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank">Norwegian Meteorological Institute</a> API</center>')
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
-    dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table])
+    dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
 
 
 port = int(os.environ.get('PORT', 7860))
