@@ -89,18 +89,51 @@ def rain_intensity(precipt):
 
 # Generate dates for which the forecast is available
 # (today plus 10 days ahead)
+
+'''
 def gen_dates():
 
     global dates_dict
+    global dates_list
     global day_read
+    global today
 
     today = datetime.today()
     day_read = today.strftime('%A %-d %B')
     dates_read = [(today + timedelta(days=x)).strftime('%A %-d %B %Y') for x in range(forecast_days)]
     dates_filt = [(today + timedelta(days=x)).strftime('%Y-%m-%d') for x in range(forecast_days)]
     dates_dict = dict(zip(dates_read, dates_filt))
+    dates_list = list(dates_dict.keys())
     return dates_dict
+'''
 
+def gen_dates():
+
+    global dates_dict
+    global dates_list
+    global day_read
+    global today
+
+    today = datetime.today()
+    day_read = today.strftime('%A %-d %B')
+
+    resp = requests.get(url=url, headers=headers, params=params)
+    data = resp.json()
+
+    dates_aval = []
+    for d in data['properties']['timeseries']:
+        date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
+        if 'next_1_hours' in d['data']:
+            dates_aval.append(date)
+
+    dates_aval = sorted(set(dates_aval))
+    dates_read = [x.strftime('%A %-d %B %Y') for x in dates_aval]
+    dates_filt = [x.strftime('%Y-%m-%d') for x in dates_aval]
+
+    dates_dict = dict(zip(dates_read, dates_filt))
+    dates_list = list(dates_dict.keys())
+
+    return dates_dict
 
 def sunrise_sunset(lat, lon, day):
 
@@ -129,10 +162,11 @@ sunrise, sunset = sunrise_sunset(lat, lon, today)
 def json_parser(date):
 
     global dfs
-    global dates_dict
+    #global dates_dict
+    #global dates_list
 
-    dates_dict = gen_dates()
-    dates_list = list(dates_dict.keys())
+    #dates_dict = gen_dates()
+    #dates_list = list(dates_dict.keys())
     resp = requests.get(url=url, headers=headers, params=params)
     data = resp.json()
 
@@ -140,11 +174,12 @@ def json_parser(date):
 
     dict_weather = {'Time': [], 'Weather': [], 'Weather outline': [], 'Temp (°C)': [], 'Rain (mm/h)': [], 'Rain level': [], 'Wind (m/s)': [], 'Wind level': [] }
 
-    av_dates = []
+
+    #av_dates = []
     for d in data['properties']['timeseries']:
         date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
         date_read = date.strftime('%Y-%m-%d')
-        av_dates.append(date.date())
+        #av_dates.append(date.date())
 
         if date_read == day:
             dict_weather['Time'].append(date.strftime('%H'))
@@ -186,6 +221,7 @@ def coor_gpx(gpx):
     global altitude
     global location
     global dates_dict
+    global dates_list
     global day_read
 
     dates_dict = gen_dates()
@@ -257,6 +293,7 @@ def date_chooser(day):
     global sunrise_icon
     global sunset_icon
     global dates_dict
+    global dates_list
 
     dates_dict = gen_dates()
     dates_list = list(dates_dict.keys())
