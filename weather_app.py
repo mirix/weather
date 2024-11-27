@@ -57,8 +57,9 @@ altitude=params['altitude']
 gpx_file = os.path.join(os.getcwd(), 'default_gpx.gpx')
 gpx_path = pathlib.Path(gpx_file)
 
+'''
 # Default dates
-forecast_days = 3
+#forecast_days = 3
 today = datetime.today()
 day_read = today.strftime('%A %-d %B')
 day_print = '<h2>' + day_read + '</h2>'
@@ -66,6 +67,7 @@ dates_read = [(today + timedelta(days=x)).strftime('%A %-d %B %Y') for x in rang
 dates_filt = [(today + timedelta(days=x)).strftime('%Y-%m-%d') for x in range(forecast_days)]
 dates_dict = dict(zip(dates_read, dates_filt))
 dates_list = list(dates_dict.keys())
+'''
 
 ### Functions ###
 
@@ -134,6 +136,16 @@ def gen_dates():
     dates_list = list(dates_dict.keys())
 
     return dates_dict
+
+# Default dates
+#forecast_days = 3
+today = datetime.today()
+day_read = today.strftime('%A %-d %B')
+day_print = '<h2>' + day_read + '</h2>'
+dates_dict = gen_dates()
+dates_list = list(dates_dict.keys())
+dates_read = list(dates_dict.keys())
+dates_filt = list(dates_dict.values())
 
 def sunrise_sunset(lat, lon, day):
 
