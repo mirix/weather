@@ -124,13 +124,18 @@ def gen_dates():
 
     dates_aval = []
     for d in data['properties']['timeseries']:
-        date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
         if 'next_1_hours' in d['data']:
-            dates_aval.append(date)
+            date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
+            dates_aval.append(date.date())
 
     dates_aval = sorted(set(dates_aval))
+
+    if len(dates_aval) > 3:
+        dates_aval = dates_aval[:3]
+
     dates_read = [x.strftime('%A %-d %B %Y') for x in dates_aval]
     dates_filt = [x.strftime('%Y-%m-%d') for x in dates_aval]
+
 
     dates_dict = dict(zip(dates_read, dates_filt))
     dates_list = list(dates_dict.keys())
