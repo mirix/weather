@@ -352,9 +352,9 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
             )
     gr.HTML('<center>Freedom Luxembourg<br><a style="color: DarkGoldenrod; font-style: italic; text-decoration: none" href="https://www.freeletz.lu/freeletz/" target="_blank">freeletz.lu</a></center>')
     gr.HTML('<center>Powered by the <a style="color: #004170; text-decoration: none" href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank">Norwegian Meteorological Institute</a> API</center>')
+    app.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
     dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
-    app.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
 
 port = int(os.environ.get('PORT', 7860))
 
