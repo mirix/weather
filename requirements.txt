@@ -1,4 +1,4 @@
-aiofiles==24.1.0
+aiofiles==23.2.1
 annotated-types==0.7.0
 anyio==4.6.2.post1
 beaufort-scale==1.0.2
