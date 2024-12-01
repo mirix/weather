@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import pathlib
 import mimetypes
@@ -111,6 +112,7 @@ def gen_dates():
 
 def gen_dates():
 
+    global dates_filt
     global dates_dict
     global dates_list
     global day_read
@@ -141,6 +143,40 @@ def gen_dates():
     dates_list = list(dates_dict.keys())
 
     return dates_dict
+
+def gen_dates_list():
+
+    global dates_filt
+    global dates_dict
+    global dates_list
+    global day_read
+    global today
+
+    today = datetime.today()
+    day_read = today.strftime('%A %-d %B')
+
+    resp = requests.get(url=url, headers=headers, params=params)
+    data = resp.json()
+
+    dates_aval = []
+    for d in data['properties']['timeseries']:
+        if 'next_1_hours' in d['data']:
+            date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
+            dates_aval.append(date.date())
+
+    dates_aval = sorted(set(dates_aval))
+
+    if len(dates_aval) > 3:
+        dates_aval = dates_aval[:3]
+
+    dates_read = [x.strftime('%A %-d %B %Y') for x in dates_aval]
+    dates_filt = [x.strftime('%Y-%m-%d') for x in dates_aval]
+
+
+    dates_dict = dict(zip(dates_read, dates_filt))
+    dates_list = list(dates_dict.keys())
+
+    return dates_list
 
 # Default dates
 #forecast_days = 3
@@ -337,9 +373,9 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
         with gr.Row():
             gr.HTML('<h1 style="color: DarkGoldenrod">Freedom Luxembourg<br><h3 style="color: #004170">The Weather for Hikers</h3></h1>')
             with gr.Column():
-                upload_gpx = gr.UploadButton(label='1. Upload your GPX track', file_count='single', size='lg', file_types=['.gpx', '.GPX'], elem_id='button', elem_classes='buttons')
+                upload_gpx = gr.UploadButton(label='1. Upload your GPX track', file_count='single', size='lg', file_types=['.gpx', '.GPX'], elem_id='button', elem_classes='buttons', interactive=True)
                 file_name = gr.HTML('<h6>' + gpx_name + '</h6>')
-            dates = gr.Dropdown(choices=dates_list, label='2. Pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
+            dates = gr.Dropdown(choices=gen_dates_list(), label='2. Pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
         gr.HTML('<h1><br></h1>')
         with gr.Row():
             choosen_date = gr.HTML(day_print)
@@ -352,12 +388,9 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
             )
     gr.HTML('<center>Freedom Luxembourg<br><a style="color: DarkGoldenrod; font-style: italic; text-decoration: none" href="https://www.freeletz.lu/freeletz/" target="_blank">freeletz.lu</a></center>')
     gr.HTML('<center>Powered by the <a style="color: #004170; text-decoration: none" href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank">Norwegian Meteorological Institute</a> API</center>')
-    app.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
+    #app.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
     dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
 
 port = int(os.environ.get('PORT', 7860))
-
-
 app.launch(server_name="0.0.0.0", server_port=port)
-
