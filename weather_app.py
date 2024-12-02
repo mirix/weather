@@ -24,6 +24,8 @@ import requests
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent='FreeLetzWeather')
 
+from apscheduler.schedulers.background import BackgroundScheduler
+
 ### Default variables ###
 
 # Met no weather forecast API
@@ -209,7 +211,9 @@ def gen_dropdown():
     dates_dict = dict(zip(dates_read, dates_filt))
     dates_list = list(dates_dict.keys())
 
-    return gr.Dropdown(choices=dates_list, label='2. Pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
+    dates = gr.Dropdown(choices=dates_list, label='2. Pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
+
+    return dates
 
 # Default dates
 #forecast_days = 3
@@ -401,7 +405,7 @@ def date_chooser(day):
     return day_print, sunrise, sunset, dfs, dates
 
 ### Gradio app ###
-with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as app:
+with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as demo:
     with gr.Column():
         with gr.Row():
             gr.HTML('<h1 style="color: DarkGoldenrod">Freedom Luxembourg<br><h3 style="color: #004170">The Weather for Hikers</h3></h1>')
@@ -421,10 +425,20 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
             )
     gr.HTML('<center>Freedom Luxembourg<br><a style="color: DarkGoldenrod; font-style: italic; text-decoration: none" href="https://www.freeletz.lu/freeletz/" target="_blank">freeletz.lu</a></center>')
     gr.HTML('<center>Powered by the <a style="color: #004170; text-decoration: none" href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank">Norwegian Meteorological Institute</a> API</center>')
-    #app.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
+    #demo.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
-    app.load(gen_dropdown, None, dates)
+    demo.load(gen_dropdown, None, dates)
     dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
 
+
+def restart_app():
+    demo.close()
+    port = int(os.environ.get('PORT', 7860))
+    demo.launch(server_name="0.0.0.0", server_port=port)
+
+scheduler = BackgroundScheduler({'apscheduler.timezone': 'Europe/Luxembourg'})
+scheduler.add_job(func=restart_app, trigger='cron', hour='00', minute='01')
+scheduler.start()
+
 port = int(os.environ.get('PORT', 7860))
-app.launch(server_name="0.0.0.0", server_port=port)
+demo.launch(server_name="0.0.0.0", server_port=port)
