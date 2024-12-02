@@ -177,6 +177,40 @@ def gen_dates_list():
 
     return dates_list
 
+def gen_dropdown():
+
+    global dates_filt
+    global dates_dict
+    global dates_list
+    global day_read
+    global today
+
+    today = datetime.today()
+    day_read = today.strftime('%A %-d %B')
+
+    resp = requests.get(url=url, headers=headers, params=params)
+    data = resp.json()
+
+    dates_aval = []
+    for d in data['properties']['timeseries']:
+        if 'next_1_hours' in d['data']:
+            date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
+            dates_aval.append(date.date())
+
+    dates_aval = sorted(set(dates_aval))
+
+    if len(dates_aval) > 3:
+        dates_aval = dates_aval[:3]
+
+    dates_read = [x.strftime('%A %-d %B %Y') for x in dates_aval]
+    dates_filt = [x.strftime('%Y-%m-%d') for x in dates_aval]
+
+
+    dates_dict = dict(zip(dates_read, dates_filt))
+    dates_list = list(dates_dict.keys())
+
+    return gr.Dropdown(choices=dates_list, label='2. Pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
+
 # Default dates
 #forecast_days = 3
 today = datetime.today()
@@ -389,6 +423,7 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as a
     gr.HTML('<center>Powered by the <a style="color: #004170; text-decoration: none" href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank">Norwegian Meteorological Institute</a> API</center>')
     #app.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
+    app.load(gen_dropdown, None, dates)
     dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
 
 port = int(os.environ.get('PORT', 7860))
