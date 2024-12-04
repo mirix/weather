@@ -1,11 +1,10 @@
 import os
 import json
 import pathlib
-import mimetypes
 import gpxpy
 import pandas as pd
 import gradio as gr
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytz
 from sunrisesunset import SunriseSunset
@@ -28,7 +27,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 ### Default variables ###
 
-# Met no weather forecast API
+# Met No weather forecast API
 url = 'https://api.met.no/weatherapi/locationforecast/2.0/complete'
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
 
@@ -48,28 +47,11 @@ css = '''
     box-shadow: 0 0 0 12px DarkGoldenrod;
 }
 '''
-# Default coordinates
-params = {'lat': 49.6108, 'lon': 6.1326, 'altitude': 310}
-lat=params['lat']
-lon=params['lon']
-altitude=params['altitude']
 
 # Default GPX if none is uploaded
-#directory = os.path.dirname(os.path.abspath(__file__))
 gpx_file = os.path.join(os.getcwd(), 'default_gpx.gpx')
 gpx_path = pathlib.Path(gpx_file)
 
-'''
-# Default dates
-#forecast_days = 3
-today = datetime.today()
-day_read = today.strftime('%A %-d %B')
-day_print = '<h2>' + day_read + '</h2>'
-dates_read = [(today + timedelta(days=x)).strftime('%A %-d %B %Y') for x in range(forecast_days)]
-dates_filt = [(today + timedelta(days=x)).strftime('%Y-%m-%d') for x in range(forecast_days)]
-dates_dict = dict(zip(dates_read, dates_filt))
-dates_list = list(dates_dict.keys())
-'''
 
 ### Functions ###
 
@@ -91,62 +73,9 @@ def rain_intensity(precipt):
         rain = ''
     return rain
 
-# Generate dates for which the forecast is available
-# (today plus 10 days ahead)
-
-'''
-def gen_dates():
-
-    global dates_dict
-    global dates_list
-    global day_read
-    global today
-
-    today = datetime.today()
-    day_read = today.strftime('%A %-d %B')
-    dates_read = [(today + timedelta(days=x)).strftime('%A %-d %B %Y') for x in range(forecast_days)]
-    dates_filt = [(today + timedelta(days=x)).strftime('%Y-%m-%d') for x in range(forecast_days)]
-    dates_dict = dict(zip(dates_read, dates_filt))
-    dates_list = list(dates_dict.keys())
-    return dates_dict
-'''
-
-def gen_dates():
-
-    global dates_filt
-    global dates_dict
-    global dates_list
-    global day_read
-    global today
-
-    today = datetime.today()
-    day_read = today.strftime('%A %-d %B')
-
-    resp = requests.get(url=url, headers=headers, params=params)
-    data = resp.json()
-
-    dates_aval = []
-    for d in data['properties']['timeseries']:
-        if 'next_1_hours' in d['data']:
-            date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
-            dates_aval.append(date.date())
-
-    dates_aval = sorted(set(dates_aval))
-
-    if len(dates_aval) > 3:
-        dates_aval = dates_aval[:3]
-
-    dates_read = [x.strftime('%A %-d %B %Y') for x in dates_aval]
-    dates_filt = [x.strftime('%Y-%m-%d') for x in dates_aval]
-
-
-    dates_dict = dict(zip(dates_read, dates_filt))
-    dates_list = list(dates_dict.keys())
-
-    return dates_dict
-
 def gen_dates_list():
 
+    global day_print
     global dates_filt
     global dates_dict
     global dates_list
@@ -155,6 +84,7 @@ def gen_dates_list():
 
     today = datetime.today()
     day_read = today.strftime('%A %-d %B')
+    day_print = '<h2>' + day_read + '</h2>'
 
     resp = requests.get(url=url, headers=headers, params=params)
     data = resp.json()
@@ -179,52 +109,6 @@ def gen_dates_list():
 
     return dates_list
 
-def gen_dropdown():
-
-    global dates_filt
-    global dates_dict
-    global dates_list
-    global day_read
-    global today
-
-    today = datetime.today()
-    day_read = today.strftime('%A %-d %B')
-
-    resp = requests.get(url=url, headers=headers, params=params)
-    data = resp.json()
-
-    dates_aval = []
-    for d in data['properties']['timeseries']:
-        if 'next_1_hours' in d['data']:
-            date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
-            dates_aval.append(date.date())
-
-    dates_aval = sorted(set(dates_aval))
-
-    if len(dates_aval) > 3:
-        dates_aval = dates_aval[:3]
-
-    dates_read = [x.strftime('%A %-d %B %Y') for x in dates_aval]
-    dates_filt = [x.strftime('%Y-%m-%d') for x in dates_aval]
-
-
-    dates_dict = dict(zip(dates_read, dates_filt))
-    dates_list = list(dates_dict.keys())
-
-    dates = gr.Dropdown(choices=dates_list, label='2. Pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
-
-    return dates
-
-# Default dates
-#forecast_days = 3
-today = datetime.today()
-day_read = today.strftime('%A %-d %B')
-day_print = '<h2>' + day_read + '</h2>'
-dates_dict = gen_dates()
-dates_list = list(dates_dict.keys())
-dates_read = list(dates_dict.keys())
-dates_filt = list(dates_dict.values())
-
 def sunrise_sunset(lat, lon, day):
 
     tz = tf.timezone_at(lng=lon, lat=lat)
@@ -246,17 +130,11 @@ def sunrise_sunset(lat, lon, day):
 
     return sunrise, sunset
 
-sunrise, sunset = sunrise_sunset(lat, lon, today)
-
 # Download the JSON and filter it per date
 def json_parser(date):
 
     global dfs
-    #global dates_dict
-    #global dates_list
 
-    #dates_dict = gen_dates()
-    #dates_list = list(dates_dict.keys())
     resp = requests.get(url=url, headers=headers, params=params)
     data = resp.json()
 
@@ -264,12 +142,9 @@ def json_parser(date):
 
     dict_weather = {'Time': [], 'Weather': [], 'Weather outline': [], 'Temp (°C)': [], 'Rain (mm/h)': [], 'Rain level': [], 'Wind (m/s)': [], 'Wind level': [] }
 
-
-    #av_dates = []
     for d in data['properties']['timeseries']:
         date = datetime.strptime(d['time'], '%Y-%m-%dT%H:%M:%SZ')
         date_read = date.strftime('%Y-%m-%d')
-        #av_dates.append(date.date())
 
         if date_read == day:
             dict_weather['Time'].append(date.strftime('%H'))
@@ -292,37 +167,28 @@ def json_parser(date):
     df['Weather outline'] = df['Weather outline'].str.capitalize().str.replace(' night','').str.replace(' day','')
     df[['Rain (mm/h)', 'Wind (m/s)']] = df[['Rain (mm/h)', 'Wind (m/s)']].round(1).replace({0:''}).astype(str)
 
-    #df.to_csv('weather.csv', index=False)
-
     dfs = df.style.set_properties(**{'border': '0px'})
 
     return dfs
 
-dfs = json_parser(dates_filt[0])
-
 # Extract coordinates and location from GPX file
-# gpx_name = '1. Click the upload GPX button to begin'
 def coor_gpx(gpx):
 
-    global gpx_name
-    global params
-    global lat
-    global lon
-    global altitude
-    global location
-    global dates_dict
-    global dates_list
-    global day_read
+    def parse_gpx(gpx):
 
-    dates_dict = gen_dates()
-    dates_list = list(dates_dict.keys())
-    day_read = dates_list[0]
-    date_filt = datetime.strptime(day_read, '%A %d %B %Y')
-    date_filt = date_filt.strftime('%Y-%m-%d')
-    day_print = '<h2>' + day_read + '</h2>'
+        global gpx_name
+        global params
+        global lat
+        global lon
+        global altitude
+        global location
+        global dates_dict
+        global dates_list
+        global day_read
+        global dates
+        global sunrise
+        global sunset
 
-    #if mimetypes.guess_type(gpx.name)[0] in ['application/gpx+xml', 'application/xml']:
-    try:
         with open(gpx.name) as f:
             gpx_parsed = gpxpy.parse(f)
         # Convert to a dataframe one point at a time.
@@ -336,7 +202,6 @@ def coor_gpx(gpx):
                         'altitude': p.elevation,
                 })
         df_gpx = pd.DataFrame.from_records(points)
-        #df_gpx = pd.read_xml(gpx.name, xpath=".//doc:trkseg/doc:trkpt", namespaces={"doc": "http://www.topografix.com/GPX/1/1"})
         params = df_gpx.iloc[-1].to_dict()
         lat = params['lat']
         lon = params['lon']
@@ -346,7 +211,6 @@ def coor_gpx(gpx):
         else:
             params['altitude'] = int(round(params['altitude'], 0))
 
-        #params['altitude'] = int(round(params['altitude'], 0))
         altitude = params['altitude']
 
         location = geolocator.reverse('{}, {}'.format(lat, lon), zoom=14)
@@ -354,26 +218,26 @@ def coor_gpx(gpx):
         gpx_name = 'You have uploaded <b style="color: #004170;">' + os.path.basename(gpx.name) + '</b>'
         location = '<p style="color: #004170">' + str(location) + '</p>'
 
+        dates_list = gen_dates_list()
+        day_read = dates_list[0]
+        date_filt = datetime.strptime(day_read, '%A %d %B %Y')
+        date_filt = date_filt.strftime('%Y-%m-%d')
+        day_print = '<h2>' + day_read + '</h2>'
+
         sunrise, sunset = sunrise_sunset(lat, lon, datetime.strptime(day_read, '%A %d %B %Y'))
 
         dates = gr.Dropdown(choices=dates_list, label='2. Next, pick up the date of your hike', value=dates_list[0], interactive=True, elem_classes='required-dropdown')
 
         dfs = json_parser(date_filt)
 
-        return gpx_name, location, dates, day_print, sunrise, sunset, dfs
-
+    try:
+        parse_gpx(gpx)
     except:
-        sunrise, sunset = sunrise_sunset(lat, lon, today)
-        dfs = json_parser(dates_filt[0])
+        parse_gpx(gpx_path)
+        global gpx_name
         gpx_name = '<b style="color: firebrick;">ERROR: Not a valid GPX file. Upload another file.</b>'
-        return gpx_name, location, dates_list, day_print, sunrise, sunset, dfs
-    #else:
-    #    sunrise, sunset = sunrise_sunset(lat, lon, today)
-    #    dfs = json_parser(dates_filt[0])
-    #    gpx_name = '<b style="color: firebrick;">ERROR: Not a valid GPX file. Upload another file.</b>'
-    #    return gpx_name, location, dates_list, day_print, sunrise, sunset, dfs
 
-coor_gpx(gpx_path)
+    return gpx_name, location, dates, day_print, sunrise, sunset, dfs
 
 # Choose a date from the dropdown menu
 def date_chooser(day):
@@ -385,8 +249,7 @@ def date_chooser(day):
     global dates_dict
     global dates_list
 
-    dates_dict = gen_dates()
-    dates_list = list(dates_dict.keys())
+    dates_list = gen_dates_list()
 
     day_read = day
     day_print = '<h2>' + day_read + '</h2>'
@@ -403,6 +266,11 @@ def date_chooser(day):
     dates = gr.Dropdown(choices=dates_list, label='2. Next, pick up the date of your hike', value=dates_list[index], interactive=True, elem_classes='required-dropdown')
 
     return day_print, sunrise, sunset, dfs, dates
+
+# Call functions with default values
+coor_gpx(gpx_path)
+sunrise, sunset = sunrise_sunset(lat, lon, today)
+dfs = json_parser(dates_filt[0])
 
 ### Gradio app ###
 with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as demo:
@@ -425,11 +293,8 @@ with gr.Blocks(theme='ParityError/Interstellar', css=css, fill_height=True) as d
             )
     gr.HTML('<center>Freedom Luxembourg<br><a style="color: DarkGoldenrod; font-style: italic; text-decoration: none" href="https://www.freeletz.lu/freeletz/" target="_blank">freeletz.lu</a></center>')
     gr.HTML('<center>Powered by the <a style="color: #004170; text-decoration: none" href="https://api.met.no/weatherapi/locationforecast/2.0/documentation" target="_blank">Norwegian Meteorological Institute</a> API</center>')
-    #demo.load(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
     upload_gpx.upload(fn=coor_gpx, inputs=upload_gpx, outputs=[file_name, loc, dates, choosen_date, sunrise, sunset, table])
-    demo.load(gen_dropdown, None, dates)
     dates.input(fn=date_chooser, inputs=dates, outputs=[choosen_date, sunrise, sunset, table, dates])
-
 
 def restart_app():
     demo.close()
@@ -437,7 +302,7 @@ def restart_app():
     demo.launch(server_name="0.0.0.0", server_port=port)
 
 scheduler = BackgroundScheduler({'apscheduler.timezone': 'Europe/Luxembourg'})
-scheduler.add_job(func=restart_app, trigger='cron', hour='00', minute='01')
+scheduler.add_job(func=restart_app, trigger='cron', hour='05', minute='55')
 scheduler.start()
 
 port = int(os.environ.get('PORT', 7860))
