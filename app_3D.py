@@ -367,7 +367,11 @@ def plot_3d_map(df_gpx, df_wp, centre_lat, centre_lon):
                 "text-allow-overlap": True,
                 "text-ignore-placement": True,
             },
-            "paint": {"text-color": "#000000"},
+	        "paint": {
+	            "text-color": "#ffffff",  # Black text for contrast
+	            "text-halo-color": "#ffffff",  # Optional: add a white halo for extra clarity
+	            "text-halo-width": 1,
+	        },
         },
         {
             "id": "marker-labels",
@@ -397,7 +401,7 @@ def plot_3d_map(df_gpx, df_wp, centre_lat, centre_lon):
     ])
 
     # Initialize map and add layer control
-    m = leafmap.Map(center=[centre_lon, centre_lat], zoom=12, pitch=60, style=style)
+    m = leafmap.Map(center=[centre_lon, centre_lat], zoom=14, pitch=60, style=style)
     m.add_layer_control(bg_layers=True)
 
     # Save HTML for debugging
@@ -494,7 +498,7 @@ def serve_layout():
                 dbc.Col(html.Div(id='sunset-time'), width={'size': 'auto'})]),
         ], style={'font-size': 13, 'font-family': 'sans'}),
         html.Div(id='datatable-div'),
-        html.Div(id='base-figure-div', style={'height': '90vh'}),
+        html.Div(id='base-figure-div', style={'height': '95vh'}),
         html.Div([dcc.Link('Freedom Luxembourg', href='https://www.freeletz.lu/freeletz/',
                 target='_blank', style={'color': 'goldenrod', 'font-size': 15, 'font-family': 'sans', 'text-decoration': 'none'}),
         ], style={'text-align': 'center'},),
@@ -618,7 +622,7 @@ def weather_forecast(n_clicks, gpx_json, cdate, h, m, freq, pace):
         ])
 
         map_html = plot_3d_map(df_gpx, df_wp, centre_lat, centre_lon)
-        figure_div = html.Iframe(srcDoc=map_html, style={'height': '100%', 'width': '100%', 'border': 'none'})
+        figure_div = html.Iframe(srcDoc=map_html, style={'height': '100%', 'width': '100%', 'border': 'none'}, sandbox='allow-scripts')
 
         return sunrise_div, sunset_div, table_div, figure_div
 
